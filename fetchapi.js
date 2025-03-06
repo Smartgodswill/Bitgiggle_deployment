@@ -1,14 +1,20 @@
-const express = require('express'); // ✅ Import express before using it
+const express = require('express');
 const fs = require('fs');
-const pool = require('./connections'); // ✅ Ensure the path is correct
+const path = require('path'); // ✅ Import path module for cross-platform file paths
+const pool = require('./connections'); // ✅ Ensure this file correctly sets up PostgreSQL connection
 
 const router = express.Router();
-const filePath = 'C:/apis/comic.json';
+const filePath = path.join(__dirname, 'comic.json'); // ✅ Correct path
 
 // Function to insert/update comics into PostgreSQL
 async function updateDatabase() {
   try {
-    const data = fs.readFileSync(filePath, 'utf8'); // ✅ Use readFileSync for synchronous reading
+    if (!fs.existsSync(filePath)) {
+      console.error('❌ JSON file not found:', filePath);
+      return;
+    }
+
+    const data = fs.readFileSync(filePath, 'utf8'); // ✅ Read file synchronously
     const comics = JSON.parse(data); // ✅ Convert JSON to JavaScript object
 
     for (const comic of comics) {
@@ -27,10 +33,10 @@ async function updateDatabase() {
 
       const values = [
         comic.title, 
-        comic.description || '', // Ensure it's not null
-        comic.genre || '', // Ensure it's not null
+        comic.description || '', // ✅ Ensure default empty string if null
+        comic.genre || '', // ✅ Ensure default empty string if null
         comic.year || null, 
-        Array.isArray(comic.images) ? comic.images: [] // Store only the first image
+        JSON.stringify(Array.isArray(comic.images) ? comic.images : []) // ✅ Store as JSON array
       ];
 
       const result = await pool.query(query, values);
@@ -63,13 +69,15 @@ router.get('/comics', async (req, res) => {
   }
 });
 
-// **Watch for JSON file changes and update DB automatically**
-fs.watch(filePath, (eventType) => {
-  if (eventType === 'change') {
-    console.log('🔄 Detected change in JSON file... Updating database...');
-    updateDatabase();
-  }
-});
+// **Watch for JSON file changes and update DB automatically (ONLY FOR LOCAL USE)**
+if (process.env.NODE_ENV !== 'production') {
+  fs.watch(filePath, (eventType) => {
+    if (eventType === 'change') {
+      console.log('🔄 Detected change in JSON file... Updating database...');
+      updateDatabase();
+    }
+  });
+}
 
 // **Initial run to load existing data when script starts**
 updateDatabase();
