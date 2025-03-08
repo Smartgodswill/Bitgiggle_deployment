@@ -19,7 +19,6 @@
     "id":"2",
     "images": [
       "https://i.ibb.co/bJ3kFHm/the-up-rising.png",
-      "",
       "https://i.ibb.co/GH6sPrQ/i-am-Tasha.png",
       "https://i.ibb.co/hDCrG9s/i-am-Tasha-2.png"
     ],
@@ -51,6 +50,7 @@
     "images": [
       "https://i.ibb.co/x6658k7/Shatoshi-s-Secrete.png",
       "https://i.ibb.co/9WKkphx/1.png"
+      
     ],
     "year":"2024",
     "genre": [
@@ -321,31 +321,20 @@
     "author": "Brian k.vaughan"
   },
   {
-    "title": "Comic Title 2",
+    "title": "Solo leveling",
     "images": [
-      "https://cdn.imagecomics.com/assets/i/releases/668718/geiger-5_661765f626.jpg",
-      "https://cdn.imagecomics.com/files/read/geiger/Geiger03.jpeg"
+      "https://img.wattpad.com/cover/307518976-256-k934777.jpg"
     ],
     "year":"2024",
     "genre": [
-      "Horror"
+      "Anime,Action"
     ],
-    "description": "Story description of Comic Title 2",
-    "author": "Another Author"
-  },
-  {
-    "title": "Mibel",
-    "images": [
-      "https://cdn.imagecomics.com/assets/i/releases/668718/geiger-5_661765f626.jpg",
-      "https://cdn.imagecomics.com/files/read/geiger/Geiger03.jpeg"
-    ],
-    "year":"2024",
-    "genre": [
-      "Horror"
-    ],
-    "description": "Story description of Comic Title 2",
+    "description": "Issei, an average teenage boy who peeps on girls with his two friends. However, overtime he started to get bored with everything he has been doing. Endless peeping, getting beaten up, getting in trouble, and not being popular. He needed something else in his life, a fresh start. The next thing he knew, there was a screen that said... [Welcome, Player.]",
     "author": "Another Author"
   }
+ 
+ 
+
   
 
 ]

@@ -1,86 +1,84 @@
-const express = require('express');
+const { createClient } = require('@supabase/supabase-js');
 const fs = require('fs');
-const path = require('path'); // ✅ Import path module for cross-platform file paths
-const pool = require('./connections'); // ✅ Ensure this file correctly sets up PostgreSQL connection
+const path = require('path');
+require('dotenv').config();
 
-const router = express.Router();
-const filePath = path.join(__dirname, 'comic.json'); // ✅ Correct path
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+const filePath = path.join(__dirname, 'comic.json');
 
-// Function to insert/update comics into PostgreSQL
-async function updateDatabase() {
+/**
+ * Sync JSON file with Supabase
+ */
+async function syncDatabaseWithJSON() {
   try {
     if (!fs.existsSync(filePath)) {
       console.error('❌ JSON file not found:', filePath);
       return;
     }
 
-    const data = fs.readFileSync(filePath, 'utf8'); // ✅ Read file synchronously
-    const comics = JSON.parse(data); // ✅ Convert JSON to JavaScript object
+    const data = fs.readFileSync(filePath, 'utf8');
+    const comics = JSON.parse(data);
 
-    for (const comic of comics) {
-      const query = `
-        INSERT INTO comics (title, description, genre, year, cloudinary_url, created_at)
-        VALUES ($1, $2, $3, $4, $5, NOW())
-        ON CONFLICT (title) 
-        DO UPDATE SET 
-          description = EXCLUDED.description,
-          genre = EXCLUDED.genre,
-          year = EXCLUDED.year,
-          cloudinary_url = EXCLUDED.cloudinary_url,
-          created_at = NOW()
-        RETURNING *;
-      `;
+    // Ensure each comic has a title
+    const formattedComics = comics.map((comic) => ({
+      title: comic.title,
+      description: comic.description || '',
+      genre: comic.genre || '',
+      year: comic.year || null,
+      cloudinary_url: comic.images ? JSON.stringify(comic.images) : '[]',
+    }));
 
-      const values = [
-        comic.title, 
-        comic.description || '', // ✅ Ensure default empty string if null
-        comic.genre || '', // ✅ Ensure default empty string if null
-        comic.year || null, 
-        JSON.stringify(Array.isArray(comic.images) ? comic.images : []) // ✅ Store as JSON array
-      ];
+    // Get current comics from Supabase
+    const { data: currentComics, error: fetchError } = await supabase.from('comics').select('title');
 
-      const result = await pool.query(query, values);
-      console.log('✅ Updated:', result.rows[0]); 
+    if (fetchError) {
+      console.error('❌ Error fetching existing comics:', fetchError.message);
+      return;
     }
 
-    console.log('✅ JSON data successfully updated in PostgreSQL!');
+    const existingTitles = currentComics.map((comic) => comic.title);
+    const newTitles = formattedComics.map((comic) => comic.title);
+
+    // Delete comics that are no longer in the JSON file
+    const titlesToDelete = existingTitles.filter((title) => !newTitles.includes(title));
+
+    if (titlesToDelete.length > 0) {
+      const { error: deleteError } = await supabase
+        .from('comics')
+        .delete()
+        .in('title', titlesToDelete).limit(10);
+
+      if (deleteError) {
+        console.error('❌ Error deleting removed comics:', deleteError.message);
+      } else {
+        console.log(`✅ Deleted comics: ${titlesToDelete.join(', ')}`);
+      }
+    }
+
+    // Insert or update comics from JSON file
+    const { error: upsertError } = await supabase
+      .from('comics')
+      .upsert(formattedComics, { onConflict: ['title'] });
+
+    if (upsertError) {
+      console.error('❌ Supabase error:', upsertError.message);
+    } else {
+      console.log('✅ Database successfully synced with JSON!');
+    }
   } catch (error) {
-    console.error('❌ Error inserting/updating data:', error);
+    console.error('❌ Error syncing database:', error);
   }
 }
 
-// **API Route to Manually Trigger Database Update**
-router.get('/update-database', async (req, res) => {
-  try {
-    await updateDatabase();
-    res.json({ message: '✅ Database updated successfully!' });
-  } catch (error) {
-    res.status(500).json({ error: '❌ Failed to update database' });
+/**
+ * Watch for file changes and sync automatically
+ */
+fs.watch(filePath, (eventType) => {
+  if (eventType === 'change') {
+    console.log('🔄 Detected change in comic.json, syncing...');
+    syncDatabaseWithJSON();
   }
 });
 
-// **API Route to Fetch Comics**
-router.get('/comics', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM comics ORDER BY created_at DESC');
-    res.json(result.rows);
-  } catch (error) {
-    res.status(500).json({ error: '❌ Failed to fetch comics' });
-  }
-});
-
-// **Watch for JSON file changes and update DB automatically (ONLY FOR LOCAL USE)**
-if (process.env.NODE_ENV !== 'production') {
-  fs.watch(filePath, (eventType) => {
-    if (eventType === 'change') {
-      console.log('🔄 Detected change in JSON file... Updating database...');
-      updateDatabase();
-    }
-  });
-}
-
-// **Initial run to load existing data when script starts**
-updateDatabase();
-
-// **Export router correctly**
-module.exports = router;
+// Export function for manual execution if needed
+module.exports = syncDatabaseWithJSON;

@@ -1,12 +1,13 @@
-const {  Pool } = require("pg");
 require("dotenv").config();
+const { Pool } = require("pg");
 
 const pool = new Pool({
-  host: process.env.MYPOSTGRES_HOSTNAME,
-  port: process.env.MYPOSTGRES_PORT,
-  database: process.env.MYPOSTGRES_DATABASE,
-  password: process.env.MYPOSTGRES_PASSWORD,
-  user: process.env.MYPOSTGRES_USERNAME,
+  connectionString: process.env.MYCONNECTION_URL,
+  ssl: { rejectUnauthorized: false }, // Required for cloud databases
 });
-pool.connect().then((result) => console.log('connected'));
+
+pool.connect()
+  .then(() => console.log("Connected successfully"))
+  .catch(err => console.error("Connection error:", err));
+
 module.exports = pool;

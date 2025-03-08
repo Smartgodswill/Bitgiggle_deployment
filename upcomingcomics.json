@@ -1,0 +1,33 @@
+[
+    {
+      "title": "The Lost Empire",
+      "author": "Alex Carter",
+      "description": "A gripping adventure through ancient civilizations.",
+      "genre": "Adventure",
+      "release_date": "2023-10-01",
+      "status": "released",
+      "pre_order": false,
+      "images": ["https://i.ibb.co/8THxgN1/lost-empire.png"]
+    },
+    {
+      "title": "The Future Chronicles",
+      "author": "John Doe",
+      "description": "A thrilling sci-fi journey into the unknown future.",
+      "genre": "Science Fiction",
+      "release_date": "2025-06-15",
+      "status": "upcoming",
+      "pre_order": true,
+      "images": [""]
+    },
+    {
+      "title": "Mystic Shadows",
+      "author": "Jane Smith",
+      "description": "A dark fantasy tale of magic and destiny.",
+      "genre": "Fantasy",
+      "release_date": "2025-09-30",
+      "status": "upcoming",
+      "pre_order": false,
+      "images": ["https://example.com/mystic-shadows-cover.jpg"]
+    }
+  ]
+  
