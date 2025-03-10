@@ -1,22 +1,24 @@
 const WebSocket = require('ws');
 
-const wss = new WebSocket.Server({ port: 8080 });
+let wss;
+const initializeWebSocket = (server) => {
+  wss = new WebSocket.Server({ server });
 
-wss.on('connection', (ws) => {
-  console.log('New client connected');
+  wss.on('connection', (ws, req) => {
+    console.log(`✅ New client connected from ${req.socket.remoteAddress}`);
 
-  ws.on('close', () => {
-    console.log('Client disconnected');
+    ws.on('close', () => console.log('❌ Client disconnected'));
   });
-});
+};
 
-// Function to notify clients
-function notifyClients(newComic) {
+const notifyClients = (update) => {
+  if (!wss) return;
+
   wss.clients.forEach((client) => {
     if (client.readyState === WebSocket.OPEN) {
-      client.send(JSON.stringify(newComic));
+      client.send(JSON.stringify(update));
     }
   });
-}
+};
 
-module.exports = { notifyClients };
+module.exports = { initializeWebSocket, notifyClients };
