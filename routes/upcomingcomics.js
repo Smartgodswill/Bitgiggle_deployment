@@ -29,7 +29,7 @@ async function syncUpcomingComics() {
       release_date: book.release_date || null,
       status: book.status || 'upcoming',
       pre_order: book.pre_order || false,
-      images: book.images ? JSON.stringify(book.images) : '[]',
+      cloudinary_url: Array.isArray(book.images) ? book.images : [], // Ensuring it's an array
     }));
 
     // Fetch current titles from Supabase
@@ -101,7 +101,7 @@ router.post('/add', async (req, res) => {
         genre,
         release_date,
         pre_order,
-        images: images ? JSON.stringify(images) : '[]',
+        cloudinary_url: Array.isArray(images) ? images : [], // Ensuring it's an array
       },
     ]);
 
@@ -131,15 +131,15 @@ router.put('/update/:id', async (req, res) => {
         genre,
         release_date,
         pre_order,
-        images: images ? JSON.stringify(images) : '[]',
+        cloudinary_url: Array.isArray(images) ? images : [], // Ensuring it's an array
       })
       .eq('id', id)
-      .single();
+      .select('*'); // Fetch updated record
 
     if (error) throw error;
 
     await syncUpcomingComics();
-    res.json({ message: 'Upcoming comic updated!', comic: data });
+    res.json({ message: 'Upcoming comic updated!', comic: data[0] });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -152,12 +152,12 @@ router.delete('/delete/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
-    const { data, error } = await supabase.from('upcoming_books').delete().eq('id', id).single();
+    const { error } = await supabase.from('upcoming_books').delete().eq('id', id);
 
     if (error) throw error;
 
     await syncUpcomingComics();
-    res.json({ message: 'Upcoming comic deleted!', comic: data });
+    res.json({ message: 'Upcoming comic deleted!' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
