@@ -27,7 +27,9 @@ async function syncDatabaseWithJSON() {
       description: comic.description || '',
       genre: comic.genre || '',
       year: comic.year || null,
-      cloudinary_url: comic.images ? JSON.stringify(comic.images) : '[]',
+      cloudinary_url: Array.isArray(comic.images) ? comic.images : [],
+
+
     }));
 
     // Get current comics from Supabase
