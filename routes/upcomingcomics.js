@@ -29,7 +29,7 @@ async function syncUpcomingComics() {
       release_date: book.release_date || null,
       status: book.status || 'upcoming',
       pre_order: book.pre_order || false,
-      images:Array.isArray(book.images) ? JSON.stringify(book.images) : "[]",// Ensuring it's an array
+      images: Array.isArray(book.images) ? JSON.stringify(book.images) : JSON.stringify([book.images]), // ✅ Fixed images reference// Ensuring it's an array
     }));
 
     // Fetch current titles from Supabase
@@ -80,11 +80,21 @@ router.get('/', async (req, res) => {
   try {
     const { data, error } = await supabase.from('upcoming_books').select('*');
     if (error) throw error;
-    res.json(data);
+
+    // Ensure images field is always an array
+    const formattedData = data.map(comic => ({
+      ...comic,
+      images: typeof comic.images === "string" && comic.images.startsWith("[") 
+        ? JSON.parse(comic.images)  // Parse back into an array
+        : [comic.images]  // Wrap single string in an array
+    }));
+
+    res.json(formattedData);
   } catch (err) {
     res.status(500).json({ error: 'Failed to load upcoming comics' });
   }
 });
+
 
 /**
  * Add a new upcoming comic
@@ -101,7 +111,8 @@ router.post('/add', async (req, res) => {
         genre,
         release_date,
         pre_order,
-        images: Array.isArray(book.images) ? JSON.stringify(book.images) : "[]",// Ensuring it's an array
+        images: Array.isArray(images) ? JSON.stringify(images) : JSON.stringify([images]),
+        // Ensuring it's an array
       },
     ]);
 
@@ -131,7 +142,7 @@ router.put('/update/:id', async (req, res) => {
         genre,
         release_date,
         pre_order,
-       images:Array.isArray(book.images) ? JSON.stringify(book.images) : "[]", // Ensuring it's an array
+       images:Array.isArray(images) ? JSON.stringify(images) : JSON.stringify([images]),        // Ensuring it's an array
       })
       .eq('id', id)
       .select('*'); // Fetch updated record
