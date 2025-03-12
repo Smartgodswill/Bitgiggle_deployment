@@ -29,7 +29,7 @@ async function syncUpcomingComics() {
       release_date: book.release_date || null,
       status: book.status || 'upcoming',
       pre_order: book.pre_order || false,
-      cloudinary_url: Array.isArray(book.images) ? book.images : [], // Ensuring it's an array
+      images:Array.isArray(book.images) ? JSON.stringify(book.images) : "[]",// Ensuring it's an array
     }));
 
     // Fetch current titles from Supabase
@@ -101,7 +101,7 @@ router.post('/add', async (req, res) => {
         genre,
         release_date,
         pre_order,
-        cloudinary_url: Array.isArray(images) ? images : [], // Ensuring it's an array
+        images: Array.isArray(book.images) ? JSON.stringify(book.images) : "[]",// Ensuring it's an array
       },
     ]);
 
@@ -131,7 +131,7 @@ router.put('/update/:id', async (req, res) => {
         genre,
         release_date,
         pre_order,
-        cloudinary_url: Array.isArray(images) ? images : [], // Ensuring it's an array
+       images:Array.isArray(book.images) ? JSON.stringify(book.images) : "[]", // Ensuring it's an array
       })
       .eq('id', id)
       .select('*'); // Fetch updated record
